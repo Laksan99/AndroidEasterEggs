@@ -1,4 +1,4 @@
----
+fd693537dacb61f48ffc2d5d99b51005c909896f---
 name: aosp-easter-egg-web-check
 description: Inspect public AOSP easter egg changes with cs.android.com, android.googlesource.com, source.android.com, and related official Android web sources. Use when checking whether PlatLogoActivity, frameworks/base/packages/EasterEgg, related resources, Android release tags, or public branch names show easter egg updates without checking out the full AOSP source tree.
 ---
