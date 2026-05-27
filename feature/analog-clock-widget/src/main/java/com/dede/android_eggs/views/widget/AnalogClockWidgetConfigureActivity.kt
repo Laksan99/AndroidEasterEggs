@@ -6,8 +6,8 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.EdgeToEdgeCompat
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,8 +44,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.dede.android_eggs.views.theme.EasterEggsTheme
 import com.dede.basic.requireDrawable
@@ -65,18 +63,11 @@ class AnalogClockWidgetConfigureActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        EdgeToEdgeCompat.enable(this)
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             onCancel()
             return
-        }
-
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        val windowInsetsControllerCompat = WindowInsetsControllerCompat(window, window.decorView)
-        windowInsetsControllerCompat.apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
         }
 
         setContent {
@@ -96,21 +87,15 @@ class AnalogClockWidgetConfigureActivity : ComponentActivity() {
     }
 
     private fun onConfirm(
-        clickAction: AnalogClockWidgetClickAction,
-        dialStyle: AnalogClockWidgetDialStyle,
+        config: AnalogClockWidgetConfig,
     ) {
         lifecycleScope.launch {
-            AnalogClockWidgetPrefs.setClickAction(
+            AnalogClockWidgetPrefs.setConfig(
                 this@AnalogClockWidgetConfigureActivity,
                 appWidgetId,
-                clickAction
+                config
             )
-            AnalogClockWidgetPrefs.setDialStyle(
-                this@AnalogClockWidgetConfigureActivity,
-                appWidgetId,
-                dialStyle
-            )
-            updateAppWidgetAsync(
+            updateAppWidget(
                 this@AnalogClockWidgetConfigureActivity,
                 AppWidgetManager.getInstance(this@AnalogClockWidgetConfigureActivity),
                 appWidgetId
@@ -128,7 +113,7 @@ class AnalogClockWidgetConfigureActivity : ComponentActivity() {
 private fun AnalogClockWidgetConfigureSheet(
     appWidgetId: Int,
     onDismissRequest: () -> Unit,
-    onConfirm: (AnalogClockWidgetClickAction, AnalogClockWidgetDialStyle) -> Unit,
+    onConfirm: (AnalogClockWidgetConfig) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -138,8 +123,9 @@ private fun AnalogClockWidgetConfigureSheet(
         mutableStateOf(AnalogClockWidgetDialStyle.ANDROID_ICONS)
     }
     LaunchedEffect(context, appWidgetId) {
-        selectedAction = AnalogClockWidgetPrefs.getClickAction(context, appWidgetId)
-        selectedDialStyle = AnalogClockWidgetPrefs.getDialStyle(context, appWidgetId)
+        val config = AnalogClockWidgetPrefs.getConfig(context, appWidgetId)
+        selectedAction = config.clickAction
+        selectedDialStyle = config.dialStyle
     }
 
     fun closeAfterAnimation(action: () -> Unit) {
@@ -228,7 +214,12 @@ private fun AnalogClockWidgetConfigureSheet(
                 TextButton(
                     onClick = {
                         closeAfterAnimation {
-                            onConfirm(selectedAction, selectedDialStyle)
+                            onConfirm(
+                                AnalogClockWidgetConfig(
+                                    clickAction = selectedAction,
+                                    dialStyle = selectedDialStyle,
+                                )
+                            )
                         }
                     }
                 ) {

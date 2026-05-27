@@ -1,0 +1,18 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/Theme.AppColors"
+    tools:viewBindingIgnore="true">
+
+    <AnalogClock
+        android:id="@+id/analog_clock"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:dial="@drawable/clock_analog_dial_cinnamon_bun_nolabel"
+        android:hand_hour="@drawable/clock_analog_simple_hour"
+        android:hand_minute="@drawable/clock_analog_simple_minute"
+        android:hand_second="@drawable/clock_analog_cinnamon_bun_label_second" />
+
+</RelativeLayout>

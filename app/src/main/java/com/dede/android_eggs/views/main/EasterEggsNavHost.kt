@@ -15,10 +15,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
+import com.dede.android_eggs.local_provider.rememberCustomTabsUriHandler
 import com.dede.android_eggs.navigation.BottomSheetSceneStrategy
 import com.dede.android_eggs.navigation.DeepLink
 import com.dede.android_eggs.navigation.EasterEggsDestination
@@ -67,7 +69,10 @@ fun EasterEggsNavHost(
     val navigator = rememberNavigator(navigationState)
     val currentRoute = navigator.currentRoute
     val konfettiController = rememberKonfettiController()
+    val context = LocalContext.current
+    val uriHandler = rememberCustomTabsUriHandler()
     CompositionLocalProvider(
+        LocalUriHandler provides uriHandler,
         LocalNavigator provides navigator,
         LocalKonfettiState provides konfettiController,
     ) {
@@ -112,7 +117,6 @@ fun EasterEggsNavHost(
             predictivePopTransitionSpec = { popTransition() },
         )
 
-        val context = LocalContext.current
         LaunchedEffect(navigator, currentRoute) {
             if (
                 !isAgreedPrivacyPolicy(context) &&

@@ -7,10 +7,10 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:theme"))
     implementation(project(":core:settings"))
-    implementation(project(":eggs:R"))
-
     implementation(libs.androidx.core)
+    implementation(libs.androidx.datastore)
     implementation(libs.google.material)
 
     implementation(platform(libs.androidx.compose.bom))

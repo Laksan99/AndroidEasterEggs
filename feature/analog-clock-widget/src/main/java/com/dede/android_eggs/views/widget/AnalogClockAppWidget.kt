@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.PendingIntentCompat
@@ -15,6 +14,7 @@ import com.dede.basic.cachedExecutor
 import com.dede.basic.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
 
 /**
  * Easter Eggs Analog clock widget.
@@ -27,9 +27,7 @@ class AnalogClockAppWidget : AppWidgetProvider() {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, AnalogClockAppWidget::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            for (appWidgetId in appWidgetIds) {
-                updateAppWidgetAsync(context, appWidgetManager, appWidgetId)
-            }
+            updateAppWidgetsAsync(context, appWidgetManager, appWidgetIds)
         }
     }
 
@@ -38,13 +36,7 @@ class AnalogClockAppWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidgetAsync(
-                context,
-                appWidgetManager,
-                appWidgetId
-            )
-        }
+        updateAppWidgetsAsync(context, appWidgetManager, appWidgetIds)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -53,14 +45,36 @@ class AnalogClockAppWidget : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: Bundle?,
     ) {
-        updateAppWidgetAsync(context, appWidgetManager, appWidgetId)
+        updateAppWidgetsAsync(context, appWidgetManager, intArrayOf(appWidgetId))
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
+        val pendingResult = goAsync()
         cachedExecutor.launch(Dispatchers.IO) {
-            for (appWidgetId in appWidgetIds) {
-                AnalogClockWidgetPrefs.clearClickAction(context, appWidgetId)
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    AnalogClockWidgetPrefs.clearConfig(context, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    private fun updateAppWidgetsAsync(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
+        val pendingResult = goAsync()
+        cachedExecutor.launch(Dispatchers.IO) {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
             }
         }
     }
@@ -69,41 +83,31 @@ class AnalogClockAppWidget : AppWidgetProvider() {
 
 private const val EXTRA_FROM_ANALOG_CLOCK_WIDGET_ACTION = "extra_from_analog_clock_widget_action"
 
-internal fun updateAppWidgetAsync(
+internal suspend fun updateAppWidget(
     context: Context,
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int,
-) {
-    cachedExecutor.launch(Dispatchers.IO) {
-        val views = RemoteViews(context.packageName, R.layout.widget_easter_egg_analog_clock)
-        views.setIcon(
-            R.id.analog_clock,
-            "setDial",
-            Icon.createWithResource(
-                context,
-                AnalogClockWidgetPrefs.getDialStyle(context, appWidgetId).dialRes
-            )
-        )
-        views.setOnClickPendingIntent(R.id.analog_clock, null)
+) = withContext(Dispatchers.IO) {
+    val config = AnalogClockWidgetPrefs.getConfig(context, appWidgetId)
+    val views = RemoteViews(context.packageName, config.dialStyle.layoutRes)
+    views.setOnClickPendingIntent(R.id.analog_clock, null)
 
-        val action = AnalogClockWidgetPrefs.getClickAction(context, appWidgetId)
-        if (action != AnalogClockWidgetClickAction.NONE) {
-            val launchIntent: Intent? = withTimeoutOrNull(300) {
-                // binder call
-                Utils.getLaunchIntent(context)
-            }
-            if (launchIntent != null) {
-                launchIntent.putExtra(EXTRA_FROM_ANALOG_CLOCK_WIDGET_ACTION, action.ordinal)
-                val intent = PendingIntentCompat.getActivity(
-                    context, 0,
-                    launchIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT,
-                    false
-                )
-                views.setOnClickPendingIntent(R.id.analog_clock, intent)
-            }
+    if (config.clickAction != AnalogClockWidgetClickAction.NONE) {
+        val launchIntent: Intent? = withTimeoutOrNull(300) {
+            // binder call
+            Utils.getLaunchIntent(context)
         }
-        // binder call
-        appWidgetManager.updateAppWidget(appWidgetId, views)
+        if (launchIntent != null) {
+            launchIntent.putExtra(EXTRA_FROM_ANALOG_CLOCK_WIDGET_ACTION, config.clickAction.ordinal)
+            val intent = PendingIntentCompat.getActivity(
+                context, 0,
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                false
+            )
+            views.setOnClickPendingIntent(R.id.analog_clock, intent)
+        }
     }
+    // binder call
+    appWidgetManager.updateAppWidget(appWidgetId, views)
 }

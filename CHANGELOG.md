@@ -1,9 +1,14 @@
 # Changelog
 
-### v4.5.1
+### v4.5.2
+
+- Known issue fixes
+
+### v4.5.1 (2026-05-07)
 
 - Add option to change app icon [#828](https://github.com/hushenghao/AndroidEasterEggs/issues/828)
 - Add analog clock widget dial styles
+- Neko controls widget add day theme
 - Update App icon [#826](https://github.com/hushenghao/AndroidEasterEggs/issues/826)
 - Update splash screen icon
 - Android 16 Landroid add progress notifications as live updates [#829](https://github.com/hushenghao/AndroidEasterEggs/issues/829)

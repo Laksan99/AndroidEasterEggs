@@ -1,9 +1,14 @@
 # 更新日志
 
-### v4.5.1
+### v4.5.2
+
+- 修复已知问题
+
+### v4.5.1 (2026-05-07)
 
 - 新增应用图标切换功能 [#828](https://github.com/hushenghao/AndroidEasterEggs/issues/828)
 - 新增模拟时钟小部件表盘样式选择
+- Neko controls 小部件添加日间模式
 - 更新应用图标 [#826](https://github.com/hushenghao/AndroidEasterEggs/issues/826)
 - 更新启动动画图标
 - Android 16 Landroid 新增通知进度实时更新 [#829](https://github.com/hushenghao/AndroidEasterEggs/issues/829)
